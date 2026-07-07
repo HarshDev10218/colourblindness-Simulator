@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Blindness Simulator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Hidden SVG Matrix Filters for Hardware Accelerated Rendering -->
+  <svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
+    <defs>
+      <filter id="protanopia">
+        <feColorMatrix type="matrix" values="0.567, 0.433, 0.000, 0, 0  0.558, 0.442, 0.000, 0, 0  0.000, 0.242, 0.758, 0, 0  0.000, 0.000, 0.000, 1, 0"/>
+      </filter>
+      <filter id="deuteranopia">
+        <feColorMatrix type="matrix" values="0.625, 0.375, 0.000, 0, 0  0.700, 0.300, 0.000, 0, 0  0.000, 0.300, 0.700, 0, 0  0.000, 0.000, 0.000, 1, 0"/>
+      </filter>
+      <filter id="tritanopia">
+        <feColorMatrix type="matrix" values="0.950, 0.050, 0.000, 0, 0  0.000, 0.433, 0.567, 0, 0  0.000, 0.475, 0.525, 0, 0  0.000, 0.000, 0.000, 1, 0"/>
+      </filter>
+      <filter id="achromatopsia">
+        <feColorMatrix type="matrix" values="0.299, 0.587, 0.114, 0, 0  0.299, 0.587, 0.114, 0, 0  0.299, 0.587, 0.114, 0, 0  0.000, 0.000, 0.000, 1, 0"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="app-container">
+    <header>
+      <h1>Color Vision Deficiency Simulator</h1>
+      <p>Upload an image to evaluate and experience visual spaces across alternative color perspectives.</p>
+    </header>
+
+    <main class="workspace">
+      <!-- Left: Controls & Context -->
+      <section class="controls-panel">
+        
+        <div class="card upload-card" id="drop-zone">
+          <input type="file" id="file-input" accept="image/png, image/jpeg, image/webp" hidden>
+          <div class="upload-prompt">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <p>Drag & drop your image here or <span class="browse-btn">Browse</span></p>
+            <small>Supports PNG, JPG, WebP</small>
+          </div>
+          <div id="file-info" class="file-info hidden">
+            <span id="meta-resolution">0 x 0</span> • <span id="meta-size">0 KB</span>
+          </div>
+        </div>
+
+        <div class="card text-card">
+          <h3>Deficiency Selection</h3>
+          <div class="matrix-grid">
+            <button class="btn mode-btn active" data-mode="normal">Normal Vision</button>
+            <button class="btn mode-btn" data-mode="protanopia">Protanopia <small>Red blind</small></button>
+            <button class="btn mode-btn" data-mode="deuteranopia">Deuteranopia <small>Green blind</small></button>
+            <button class="btn mode-btn" data-mode="tritanopia">Tritanopia <small>Blue blind</small></button>
+            <button class="btn mode-btn" data-mode="achromatopsia">Achromatopsia <small>Total color blind</small></button>
+          </div>
+          <p id="condition-desc" class="condition-description">Showing unmapped normal color space.</p>
+        </div>
+
+        <div class="card text-card">
+          <h3>Workspace Layout</h3>
+          <div class="toggle-group">
+            <button class="btn layout-btn active" data-layout="split">Split Slider</button>
+            <button class="btn layout-btn" data-layout="side">Side by Side</button>
+          </div>
+
+          <div class="zoom-control">
+            <label for="zoom-range">Zoom Viewport: <span id="zoom-label">100%</span></label>
+            <input type="range" id="zoom-range" min="100" max="300" value="100" step="10">
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="download-btn" class="btn primary-btn" disabled>Download Preview</button>
+          <button id="reset-btn" class="btn secondary-btn">Clear Canvas</button>
+        </div>
+      </section>
+
+      <!-- Right: Interactive Dynamic Viewport -->
+      <section class="viewport-panel">
+        <div class="view-wrapper split-mode" id="view-wrapper">
+          
+          <!-- Image Containers -->
+          <div class="image-frame" id="image-frame">
+            <!-- Base Original Image Layer -->
+            <img id="img-original" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500'%3E%3Crect width='100%25' height='100%25' fill='%231e293b'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-family='sans-serif' font-size='20'%3EPlease upload or drop an image to start simulation%3C/text%3E%3C/svg%3E" alt="Original Image Baseline">
+            
+            <!-- Overlay Simulated Filtering Layer -->
+            <div class="simulated-overlay" id="simulated-overlay">
+              <img id="img-simulated" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500'%3E%3Crect width='100%25' height='100%25' fill='%231e293b'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-family='sans-serif' font-size='20'%3EPlease upload or drop an image to start simulation%3C/text%3E%3C/svg%3E" alt="Simulated Processing Pipeline">
+            </div>
+
+            <!-- Interactivity Handle Element -->
+            <div class="slider-handle" id="slider-handle">
+              <div class="handle-bar"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
